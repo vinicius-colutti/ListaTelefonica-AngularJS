@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html ng-app="listaTelefonica">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="bootstrap/bootstrap.css">
+    <title>Lista Telefonica</title>
+
+    <script type="text/javascript" src="angular-1.4.8/angular.js">
+    </script>
+
+    <script type="text/javascript" src="angular-1.4.8/angular-messages.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <script type="text/javascript">
+      angular.module("listaTelefonica", ["ngMessages"])
+
+      angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function ($scope, $http, $timeout) {
+        $scope.app = "Lista Telefonica";
+        $scope.contatos = [];
+        $scope.operadoras = [];
+        $scope.btnName = "Adicionar Contatos";
+        $scope.esconder = true;
+        $scope.esconder_delete = true;
+
+        $http({
+            method: 'get',
+            url: 'http://localhost/ListaTelefonica/backend_php/select.php'
+        }).then(function (response) {
+            console.log(response, 'res');
+            $scope.contatos = response.data;
+        },function (error){
+            console.log(error, 'can not get data.');
+        });
+
+        $http({
+            method: 'get',
+            url: 'http://localhost/ListaTelefonica/backend_php/select_operadoras.php'
+        }).then(function (response_operadoras) {
+            console.log(response_operadoras, 'res');
+            $scope.operadoras = response_operadoras.data;
+        },function (error){
+            console.log(error, 'can not get data.');
+        });
+
+        $scope.inserir = function (value){
+          var data_insercao = new Date();
+
+          //var teste = $scope.id_operadora;
+          //alert(value);
+          var id_operadora = document.contatoForm.operdoras_select.selectedIndex;
+          //alert(id_operadora);
+      		//set the data array
+      		var data = {
+            'nome_contato': $scope.nome_value,
+            'telefone_contato': $scope.telefone_value,
+            'id_operadora': id_operadora,
+            'data_insercao':data_insercao,
+            'botao': $scope.btnName,
+            'id_contato_get': parseInt($scope.id)
+      		}
+      		//use $http.post to send above data to php
+      		$http.post('http://localhost/ListaTelefonica/backend_php/add_student.php', JSON.stringify(data)).then(function(response){
+      			//clear the form fields
+
+            //$scope.contatos.push(contatos);
+            //delete $scope.contatos;
+
+            $http({
+                method: 'get',
+                url: 'http://localhost/ListaTelefonica/backend_php/select.php'
+            }).then(function (response) {
+                console.log(response, 'res');
+                $scope.contatos = response.data;
+            },function (error){
+                console.log(error, 'can not get data.');
+            });
+            //$scope.contatoForm.$setPristine();
+            $scope.contatoForm.$setPristine();
+
+            delete $scope.nome_value;
+            delete $scope.telefone_value;
+
+            console.log(data);
+              $scope.esconder = false;
+
+      			//hide the msg after 2 secs
+            $timeout(function(){
+                $scope.esconder = true;
+            }, 2000);
+
+            $scope.btnName = "Adicionar Contatos";
+            document.getElementById('btn').disabled=true
+
+      		});
+      	}
+
+
+        $scope.update = function(nome, telefone, operadora, id_operadora, id_contato){
+
+              //alert(id_operadora);
+              var  id_contato_get = id_contato;
+
+
+              $scope.nome_value = nome;
+              $scope.telefone_value = telefone;
+              //alert(nome);
+              $scope.btnName = "Editar";
+              $scope.id = id_contato;
+              //alert(id_operadora);
+              document.contatoForm.operdoras_select.selectedIndex = id_operadora;
+
+              document.getElementById('btn').disabled=false;
+            //  alert(nome);
+
+
+
+
+        };
+
+
+
+        $scope.apagarContato = function(value){
+          alert($scope.id);
+
+          var data = {
+            'id_contato_get': parseInt($scope.id)
+      		}
+
+
+          $http.post('http://localhost/ListaTelefonica/backend_php/delete.php', JSON.stringify(data)).then(function(response){
+      			//clear the form fields
+
+            //$scope.contatos.push(contatos);
+            //delete $scope.contatos;
+
+            $http({
+                method: 'get',
+                url: 'http://localhost/ListaTelefonica/backend_php/select.php'
+            }).then(function (response) {
+                console.log(response, 'res');
+                $scope.contatos = response.data;
+            },function (error){
+                console.log(error, 'can not get data.');
+            });
+            //$scope.contatoForm.$setPristine();
+            $scope.contatoForm.$setPristine();
+
+            delete $scope.nome_value;
+            delete $scope.telefone_value;
+
+            //console.log(data);
+            $scope.esconder_delete = false;
+
+      			//hide the msg after 2 secs
+            $timeout(function(){
+                $scope.esconder_delete = true;
+            }, 2000);
+
+            $scope.btnName = "Adicionar Contatos";
+            document.getElementById('btn').disabled=true
+
+      		});
+
+        };
+
+
+        $scope.isContatosSelecionados = function(contatos){
+            return contatos.some(function (contato){
+              return contato.selecionado;
+
+            });
+
+        };
+
+        $scope.criterioOrdenar = function(campo){
+
+            $scope.ordenarCampos = campo;
+            $scope.direcao = !$scope.direcao;
+
+
+        };
+
+
+
+        $scope.addContato = function (contato){
+            $scope.contatos.push(angular.copy(contato));
+            delete $scope.contato;
+
+
+            $scope.contatoForm.$setPristine();
+        };
+
+
+
+      });
+
+    </script>
+
+  </head>
+  <body ng-controller="listaTelefonicaCtrl">
+    <div class="jumbotron">
+
+      <h3>
+        {{app}}
+      </h3>
+      <input type="text" name="" ng-model="busca" value="" placeholder="Pesquise aqui..." class="form-control">
+      <table class="table" ng-show="contatos.length > 0" >
+        <tr>
+          <th></th>
+          <th><a href="" ng-click="criterioOrdenar('nome')">Nome</a></th>
+          <th><a href="" ng-click="criterioOrdenar('telefone')">Telefone</a></th>
+          <th>Operadora</th>
+          <th>Data</th>
+        </tr>
+
+        <!-- limitTo: valor, este comando determina a quantidade de objetso que irá ser exebido do array -->
+        <!--  | filter:{nome: busca} | orderBy:ordenarCampos:direcao -->
+        <tr ng-class="{selecionado: contato.selecionado}" ng-repeat="contato in contatos | filter:{nome: busca} | orderBy:ordenarCampos:direcao">
+          <!-- SE EU QUISER DETERMINAR QAUIS VALORES VOU PRINTAR NA TELA-->
+          <td> <input type="checkbox" name="btn" value="" id="operadoras_lista" ng-model="contato.selecionado" ng-click="update(contato.nome, contato.telefone, contato.nome.operadora, contato.id_operadora, contato.id_contato)"></td>
+          <td>{{contato.nome | uppercase}}</td>
+          <td>{{contato.telefone}}</td>
+          <td>{{contato.nome_operadora| lowercase}}</td>
+          <td>{{contato.data_insercao | date: "EEEE dd/MM/yyyy HH:mm"}}</td>
+          <td> <div class="div_cores" ng-style="{'background-color': contato.cor}">
+
+          </div> </td>
+
+          <!--SE EU QUISER PRINTAR TODOS DE UMA VEZ
+          <td ng-repeat="(key, value) in contato">
+            {{value}}
+          </td>-->
+
+        </tr>
+      </table>
+      <hr/>
+      <form name="contatoForm" ng-model="contatoForm">
+
+
+      <input class="form-control" type="text" name="id" value="" ng-model="id" style="display:none;">
+      <input class="form-control" type="text" name="nome" value="" ng-model="nome_value" placeholder="Nome" ng-required="true" ng-minlength="10">
+      <input class="form-control" type="text" name="telefone" value="" ng-model="telefone_value" placeholder="Telefone" ng-required="true">
+      <select id="id_da_operadora"class="form-control" class="" name="operdoras_select" ng-model="operadora.id_operadora" ng-options="operadora.nome_operadora + ' (' + (operadora.preco_operadora | currency) + ')' for operadora in operadoras | orderBy:'id_operadora'" ng-required="true">
+        <option value="" selected="operadora.id_operadora">Selecione uma operadora</option>
+
+      </select>
+
+    </form>
+
+    <div ng-show="contatoForm.nome.$dirty"  ng-messages="contatoForm.nome.$error">
+
+
+      <div ng-message="required" class="alert alert-danger">
+        Por favor, preencha o nome.
+      </div>
+
+      <div ng-message="minlength" class="alert alert-danger">
+        Hey amigo, seu nome  ta pequeno de mais!.
+      </div>
+    </div>
+
+      <div ng-show="contatoForm.telefone.$invalid && contatoForm.telefone.$dirty" class="alert alert-danger">
+        Por favor, preencha o telefone.
+      </div>
+      <button type="" class="btn btn-primary btn-block" name="button" ng-model="btn" id="btn" ng-click="inserir(operadora.id_operadora)" ng-disabled="contatoForm.$invalid">{{btnName}}</button>
+      <button type="" class="btn  btn-danger btn-block" name="button" ng-click="apagarContato(contatos)" ng-show="isContatosSelecionados(contatos)">Apagar Contato</button>
+      <div class="alert alert-success"ng-hide="esconder">
+        <strong>Finalizado!!</strong> Usuário adicionado!
+      </div>
+      <div class="alert alert-danger"ng-hide="esconder_delete">
+        <strong>Finalizado!!</strong> Usuário removido!
+      </div>
+    </div>
+    <div class="" ng-include="'footer.html'">
+
+    </div>
+  </body>
+</html>

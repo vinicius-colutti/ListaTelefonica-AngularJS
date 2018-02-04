@@ -1,0 +1,43 @@
+.jumbotron{
+  width: 600px;
+  text-align: center;
+  margin:auto;
+
+}
+
+.table{
+margin-top: 20px;
+
+
+}
+
+.form-control{
+margin-bottom: 10px;
+
+}
+
+.selecionado{
+background-color: green;
+opacity: 0.7;
+border-radius: 40px;
+
+}
+.div_cores{
+width: 20px;
+background-color: yellow;
+height: 20px;
+
+
+}
+.footer p{
+margin-top: 40px;
+text-align: center;
+
+}
+
+.alert{
+
+margin-top: 8px;
+
+
+}
